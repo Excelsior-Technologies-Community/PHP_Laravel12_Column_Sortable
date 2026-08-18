@@ -10,18 +10,27 @@ class Task extends Model
 {
     use HasFactory, Sortable;
 
+    /**
+     * The attributes that are mass assignable.
+     */
     protected $fillable = [
-        'title', 
-        'description', 
-        'priority', 
-        'status', 
-        'due_date'
+        'title',
+        'description',
+        'priority',
+        'status',
+        'due_date',
     ];
 
+    /**
+     * Cast attributes to native types.
+     */
     protected $casts = [
-        'due_date' => 'date', // This converts due_date to Carbon instance
+        'due_date' => 'date',
     ];
 
+    /**
+     * Columns that can be sorted.
+     */
     public $sortable = [
         'id',
         'title',
@@ -29,6 +38,6 @@ class Task extends Model
         'status',
         'due_date',
         'created_at',
-        'updated_at'
+        'updated_at',
     ];
 }
