@@ -1,639 +1,944 @@
 @extends('layouts.app')
 
+@section('title', 'Tasks | Task Manager')
+
 @section('content')
 
-    {{-- Page Header --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
+{{-- PAGE HEADER --}}
+<div class="d-flex justify-content-between page-header mb-4">
 
-        <h1>Tasks List</h1>
+    <div>
 
-        <a href="{{ route('tasks.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i>
+        <div class="d-flex align-items-center gap-2 mb-1">
+
+            <h1 class="page-title mb-0">
+                Tasks
+            </h1>
+
+            <span class="badge bg-primary">
+                {{ $statistics['total'] }} Total
+            </span>
+
+        </div>
+
+        <p class="page-subtitle">
+            Manage, search, filter and organize your tasks
+        </p>
+
+    </div>
+
+
+    <div class="d-flex gap-2 action-header">
+
+        <a
+            href="{{ route('tasks.trash') }}"
+            class="btn btn-outline-dark">
+
+            <i class="bi bi-trash3 me-1"></i>
+            Trash
+
+            @if($statistics['trashed'] > 0)
+
+            <span class="badge bg-danger ms-1">
+                {{ $statistics['trashed'] }}
+            </span>
+
+            @endif
+
+        </a>
+
+
+        <a
+            href="{{ route('tasks.export', request()->query()) }}"
+            class="btn btn-outline-success">
+
+            <i class="bi bi-download me-1"></i>
+            Export CSV
+
+        </a>
+
+
+        <a
+            href="{{ route('tasks.create') }}"
+            class="btn btn-primary">
+
+            <i class="bi bi-plus-lg me-1"></i>
             Create Task
+
         </a>
 
     </div>
 
-
-    {{-- Search and Filter Card --}}
-    <div class="card mb-4">
-
-        <div class="card-header">
-
-            <h5 class="mb-0">
-                <i class="bi bi-search"></i>
-                Search & Filter Tasks
-            </h5>
-
-        </div>
-
-        <div class="card-body">
-
-            <form action="{{ route('tasks.index') }}" method="GET">
-
-                {{-- First Row --}}
-                <div class="row g-3">
-
-                    {{-- Search --}}
-                    <div class="col-md-5">
-
-                        <label for="search" class="form-label">
-                            Search
-                        </label>
-
-                        <input
-                            type="text"
-                            name="search"
-                            id="search"
-                            class="form-control"
-                            placeholder="Search by title or description..."
-                            value="{{ request('search') }}"
-                        >
-
-                    </div>
+</div>
 
 
-                    {{-- Status Filter --}}
-                    <div class="col-md-3">
+{{-- STATISTICS --}}
+<div class="row g-3 section-space">
 
-                        <label for="status" class="form-label">
-                            Status
-                        </label>
+    <div class="col-6 col-lg-2">
 
-                        <select
-                            name="status"
-                            id="status"
-                            class="form-select"
-                        >
+        <div class="card stat-card h-100">
 
-                            <option value="">
-                                All Statuses
-                            </option>
+            <div class="card-body">
 
-                            <option
-                                value="Pending"
-                                {{ request('status') === 'Pending' ? 'selected' : '' }}
-                            >
-                                Pending
-                            </option>
+                <div class="d-flex justify-content-between align-items-center mb-3">
 
-                            <option
-                                value="In Progress"
-                                {{ request('status') === 'In Progress' ? 'selected' : '' }}
-                            >
-                                In Progress
-                            </option>
+                    <span class="stat-label">
+                        Total
+                    </span>
 
-                            <option
-                                value="Completed"
-                                {{ request('status') === 'Completed' ? 'selected' : '' }}
-                            >
-                                Completed
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    {{-- Priority Filter --}}
-                    <div class="col-md-2">
-
-                        <label for="priority" class="form-label">
-                            Priority
-                        </label>
-
-                        <select
-                            name="priority"
-                            id="priority"
-                            class="form-select"
-                        >
-
-                            <option value="">
-                                All Priorities
-                            </option>
-
-                            <option
-                                value="Low"
-                                {{ request('priority') === 'Low' ? 'selected' : '' }}
-                            >
-                                Low
-                            </option>
-
-                            <option
-                                value="Medium"
-                                {{ request('priority') === 'Medium' ? 'selected' : '' }}
-                            >
-                                Medium
-                            </option>
-
-                            <option
-                                value="High"
-                                {{ request('priority') === 'High' ? 'selected' : '' }}
-                            >
-                                High
-                            </option>
-
-                        </select>
-
+                    <div class="stat-icon bg-primary-subtle text-primary">
+                        <i class="bi bi-list-check"></i>
                     </div>
 
                 </div>
 
-
-                {{-- Second Row --}}
-                <div class="row g-3 mt-1">
-
-                    {{-- Due Date From --}}
-                    <div class="col-md-3">
-
-                        <label for="due_date_from" class="form-label">
-                            Due Date From
-                        </label>
-
-                        <input
-                            type="date"
-                            name="due_date_from"
-                            id="due_date_from"
-                            class="form-control"
-                            value="{{ request('due_date_from') }}"
-                        >
-
-                    </div>
-
-
-                    {{-- Due Date To --}}
-                    <div class="col-md-3">
-
-                        <label for="due_date_to" class="form-label">
-                            Due Date To
-                        </label>
-
-                        <input
-                            type="date"
-                            name="due_date_to"
-                            id="due_date_to"
-                            class="form-control"
-                            value="{{ request('due_date_to') }}"
-                        >
-
-                    </div>
-
-
-                    {{-- Overdue Filter --}}
-                    <div class="col-md-3 d-flex align-items-end">
-
-                        <div class="form-check mb-2">
-
-                            <input
-                                type="checkbox"
-                                name="overdue"
-                                value="1"
-                                id="overdue"
-                                class="form-check-input"
-                                {{ request()->boolean('overdue') ? 'checked' : '' }}
-                            >
-
-                            <label
-                                for="overdue"
-                                class="form-check-label"
-                            >
-                                <i class="bi bi-exclamation-triangle text-danger"></i>
-                                Show overdue tasks only
-                            </label>
-
-                        </div>
-
-                    </div>
-
-
-                    {{-- Buttons --}}
-                    <div class="col-md-3 d-flex align-items-end gap-2">
-
-                        <button
-                            type="submit"
-                            class="btn btn-primary"
-                        >
-                            <i class="bi bi-search"></i>
-                            Search
-                        </button>
-
-                        <a
-                            href="{{ route('tasks.index') }}"
-                            class="btn btn-secondary"
-                            title="Clear search and filters"
-                        >
-                            <i class="bi bi-x-circle"></i>
-                            Clear
-                        </a>
-
-                    </div>
-
+                <div class="stat-value">
+                    {{ $statistics['total'] }}
                 </div>
 
-            </form>
+            </div>
 
         </div>
 
     </div>
 
 
-    {{-- Active Filters --}}
-    @if(
-        request()->filled('search') ||
-        request()->filled('status') ||
-        request()->filled('priority') ||
-        request()->filled('due_date_from') ||
-        request()->filled('due_date_to') ||
-        request()->boolean('overdue')
-    )
+    <div class="col-6 col-lg-2">
 
-        <div class="alert alert-info d-flex align-items-center mb-4">
+        <div class="card stat-card h-100">
 
-            <i class="bi bi-funnel me-2"></i>
+            <div class="card-body">
 
-            <div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
 
-                <strong>Active filters:</strong>
-
-                @if(request()->filled('search'))
-
-                    <span class="badge bg-primary ms-1">
-                        Search: {{ request('search') }}
+                    <span class="stat-label">
+                        Pending
                     </span>
 
-                @endif
+                    <div class="stat-icon bg-secondary-subtle text-secondary">
+                        <i class="bi bi-clock"></i>
+                    </div>
 
+                </div>
 
-                @if(request()->filled('status'))
-
-                    <span class="badge bg-info text-dark ms-1">
-                        Status: {{ request('status') }}
-                    </span>
-
-                @endif
-
-
-                @if(request()->filled('priority'))
-
-                    <span class="badge bg-warning text-dark ms-1">
-                        Priority: {{ request('priority') }}
-                    </span>
-
-                @endif
-
-
-                @if(request()->filled('due_date_from'))
-
-                    <span class="badge bg-secondary ms-1">
-                        From: {{ request('due_date_from') }}
-                    </span>
-
-                @endif
-
-
-                @if(request()->filled('due_date_to'))
-
-                    <span class="badge bg-secondary ms-1">
-                        To: {{ request('due_date_to') }}
-                    </span>
-
-                @endif
-
-
-                @if(request()->boolean('overdue'))
-
-                    <span class="badge bg-danger ms-1">
-                        Overdue Only
-                    </span>
-
-                @endif
+                <div class="stat-value">
+                    {{ $statistics['pending'] }}
+                </div>
 
             </div>
 
         </div>
 
-    @endif
+    </div>
 
 
-    {{-- Bulk Delete Form --}}
-    <form
-        action="{{ route('tasks.bulk-destroy') }}"
-        method="POST"
-        id="bulkDeleteForm"
-    >
+    <div class="col-6 col-lg-2">
 
-        @csrf
+        <div class="card stat-card h-100">
 
-        {{-- Bulk Actions --}}
-        <div
-            class="d-flex justify-content-between align-items-center mb-3"
-            id="bulkActions"
-            style="display: none !important;"
-        >
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <span class="stat-label">
+                        In Progress
+                    </span>
+
+                    <div class="stat-icon bg-info-subtle text-info">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </div>
+
+                </div>
+
+                <div class="stat-value">
+                    {{ $statistics['in_progress'] }}
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-6 col-lg-2">
+
+        <div class="card stat-card h-100">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <span class="stat-label">
+                        Completed
+                    </span>
+
+                    <div class="stat-icon bg-success-subtle text-success">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+
+                </div>
+
+                <div class="stat-value">
+                    {{ $statistics['completed'] }}
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-6 col-lg-2">
+
+        <div class="card stat-card h-100">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <span class="stat-label">
+                        Overdue
+                    </span>
+
+                    <div class="stat-icon bg-danger-subtle text-danger">
+                        <i class="bi bi-exclamation-circle"></i>
+                    </div>
+
+                </div>
+
+                <div class="stat-value text-danger">
+                    {{ $statistics['overdue'] }}
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-6 col-lg-2">
+
+        <div class="card stat-card h-100">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <span class="stat-label">
+                        Trash
+                    </span>
+
+                    <div class="stat-icon bg-dark-subtle text-dark">
+                        <i class="bi bi-trash3"></i>
+                    </div>
+
+                </div>
+
+                <div class="stat-value">
+                    {{ $statistics['trashed'] }}
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{{-- FILTER --}}
+<div class="card section-space">
+
+    <div class="card-header">
+
+        <div class="filter-header">
 
             <div>
 
-                <span class="text-muted">
-                    <strong id="selectedCount">0</strong>
-                    task(s) selected
-                </span>
+                <div class="filter-title">
+
+                    <i class="bi bi-funnel me-2 text-primary"></i>
+                    Search & Filter Tasks
+
+                </div>
+
+                <small class="text-muted">
+                    Find tasks quickly using multiple filters
+                </small>
 
             </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="card-body">
+
+        <form
+            action="{{ route('tasks.index') }}"
+            method="GET">
+
+            <div class="row g-3">
+
+                <div class="col-lg-5">
+
+                    <label class="form-label">
+                        Search
+                    </label>
+
+                    <div class="input-group">
+
+                        <span class="input-group-text bg-white">
+                            <i class="bi bi-search"></i>
+                        </span>
+
+                        <input
+                            type="text"
+                            name="search"
+                            class="form-control"
+                            placeholder="Search title or description..."
+                            value="{{ request('search') }}">
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-lg-2">
+
+                    <label class="form-label">
+                        Status
+                    </label>
+
+                    <select
+                        name="status"
+                        class="form-select">
+
+                        <option value="">
+                            All Statuses
+                        </option>
+
+                        <option
+                            value="Pending"
+                            {{ request('status') === 'Pending' ? 'selected' : '' }}>
+                            Pending
+                        </option>
+
+                        <option
+                            value="In Progress"
+                            {{ request('status') === 'In Progress' ? 'selected' : '' }}>
+                            In Progress
+                        </option>
+
+                        <option
+                            value="Completed"
+                            {{ request('status') === 'Completed' ? 'selected' : '' }}>
+                            Completed
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="col-lg-2">
+
+                    <label class="form-label">
+                        Priority
+                    </label>
+
+                    <select
+                        name="priority"
+                        class="form-select">
+
+                        <option value="">
+                            All Priorities
+                        </option>
+
+                        <option
+                            value="Low"
+                            {{ request('priority') === 'Low' ? 'selected' : '' }}>
+                            Low
+                        </option>
+
+                        <option
+                            value="Medium"
+                            {{ request('priority') === 'Medium' ? 'selected' : '' }}>
+                            Medium
+                        </option>
+
+                        <option
+                            value="High"
+                            {{ request('priority') === 'High' ? 'selected' : '' }}>
+                            High
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="col-lg-3">
+
+                    <label class="form-label">
+                        Records Per Page
+                    </label>
+
+                    <select
+                        name="per_page"
+                        class="form-select">
+
+                        @foreach([5,10,25,50,100] as $number)
+
+                        <option
+                            value="{{ $number }}"
+                            {{ $perPage == $number ? 'selected' : '' }}>
+
+                            {{ $number }} records
+
+                        </option>
+
+                        @endforeach
+
+                    </select>
+
+                </div>
+
+
+                <div class="col-lg-3">
+
+                    <label class="form-label">
+                        Due Date From
+                    </label>
+
+                    <input
+                        type="date"
+                        name="due_date_from"
+                        class="form-control"
+                        value="{{ request('due_date_from') }}">
+
+                </div>
+
+
+                <div class="col-lg-3">
+
+                    <label class="form-label">
+                        Due Date To
+                    </label>
+
+                    <input
+                        type="date"
+                        name="due_date_to"
+                        class="form-control"
+                        value="{{ request('due_date_to') }}">
+
+                </div>
+
+
+                <div class="col-lg-3 d-flex align-items-end">
+
+                    <div class="form-check mb-2">
+
+                        <input
+                            type="checkbox"
+                            name="overdue"
+                            value="1"
+                            id="overdue"
+                            class="form-check-input"
+                            {{ request()->boolean('overdue') ? 'checked' : '' }}>
+
+                        <label
+                            for="overdue"
+                            class="form-check-label">
+
+                            <i class="bi bi-exclamation-triangle text-danger me-1"></i>
+                            Overdue only
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-lg-3 d-flex align-items-end gap-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary">
+
+                        <i class="bi bi-search me-1"></i>
+                        Search
+
+                    </button>
+
+
+                    <a
+                        href="{{ route('tasks.index') }}"
+                        class="btn btn-light border">
+
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        Reset
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+{{-- ACTIVE FILTERS --}}
+@if(
+request()->filled('search') ||
+request()->filled('status') ||
+request()->filled('priority') ||
+request()->filled('due_date_from') ||
+request()->filled('due_date_to') ||
+request()->boolean('overdue')
+)
+
+<div class="alert active-filter d-flex align-items-center mb-4">
+
+    <i class="bi bi-funnel-fill me-2"></i>
+
+    <div>
+
+        <strong>Active filters:</strong>
+
+        @if(request()->filled('search'))
+        <span class="badge bg-primary ms-1">
+            Search: {{ request('search') }}
+        </span>
+        @endif
+
+        @if(request()->filled('status'))
+        <span class="badge bg-info text-dark ms-1">
+            {{ request('status') }}
+        </span>
+        @endif
+
+        @if(request()->filled('priority'))
+        <span class="badge bg-warning text-dark ms-1">
+            {{ request('priority') }}
+        </span>
+        @endif
+
+        @if(request()->filled('due_date_from'))
+        <span class="badge bg-secondary ms-1">
+            From: {{ request('due_date_from') }}
+        </span>
+        @endif
+
+        @if(request()->filled('due_date_to'))
+        <span class="badge bg-secondary ms-1">
+            To: {{ request('due_date_to') }}
+        </span>
+        @endif
+
+        @if(request()->boolean('overdue'))
+        <span class="badge bg-danger ms-1">
+            Overdue Only
+        </span>
+        @endif
+
+    </div>
+
+</div>
+
+@endif
+
+
+{{-- BULK ACTIONS --}}
+<form
+    action="{{ route('tasks.bulk-destroy') }}"
+    method="POST"
+    id="bulkDeleteForm">
+
+    @csrf
+
+
+    <div
+        id="bulkActions"
+        class="card mb-3"
+        style="display:none;">
+
+        <div class="card-body py-3 d-flex justify-content-between align-items-center">
+
+            <span class="text-muted">
+
+                <i class="bi bi-check2-square me-1"></i>
+
+                <strong id="selectedCount">0</strong>
+                task(s) selected
+
+            </span>
+
 
             <button
                 type="submit"
                 class="btn btn-danger"
-                onclick="return confirm('Are you sure you want to delete the selected tasks?')"
-            >
+                onclick="return confirm('Move selected tasks to trash?')">
 
-                <i class="bi bi-trash"></i>
+                <i class="bi bi-trash3 me-1"></i>
                 Delete Selected
 
             </button>
 
         </div>
 
+    </div>
 
-        {{-- Tasks Table --}}
-        <div class="card">
 
-            <div class="card-body">
+    {{-- TASK TABLE --}}
+    <div class="card">
 
-                <div class="table-responsive">
+        <div class="card-header d-flex justify-content-between align-items-center">
 
-                    <table class="table table-hover align-middle">
+            <div>
 
-                        <thead class="table-light">
+                <h5 class="mb-1">
+                    All Tasks
+                </h5>
 
-                            <tr>
+                <small class="text-muted">
+                    {{ $tasks->total() }} task(s) found
+                </small>
 
-                                {{-- Select All --}}
-                                <th width="50">
+            </div>
 
-                                    <input
-                                        type="checkbox"
-                                        class="form-check-input"
-                                        id="selectAll"
-                                        title="Select all tasks"
-                                    >
+            <span class="badge bg-light text-dark border">
 
-                                </th>
+                Page {{ $tasks->currentPage() }}
 
+            </span>
 
-                                <th>
-                                    @sortablelink('id', 'ID')
-                                </th>
+        </div>
 
-                                <th>
-                                    @sortablelink('title', 'Title')
-                                </th>
 
-                                <th>
-                                    @sortablelink('priority', 'Priority')
-                                </th>
+        <div class="card-body p-0">
 
-                                <th>
-                                    @sortablelink('status', 'Status')
-                                </th>
+            <div class="table-responsive">
 
-                                <th>
-                                    @sortablelink('due_date', 'Due Date')
-                                </th>
+                <table class="table table-hover align-middle">
 
-                                <th>
-                                    @sortablelink('created_at', 'Created')
-                                </th>
+                    <thead>
 
-                                <th>
-                                    Actions
-                                </th>
+                        <tr>
 
-                            </tr>
+                            <th width="50">
+                                <input
+                                    type="checkbox"
+                                    id="selectAll"
+                                    class="form-check-input">
+                            </th>
 
-                        </thead>
+                            <th>
+                                @sortablelink('id', 'ID')
+                            </th>
 
+                            <th>
+                                @sortablelink('title', 'Task')
+                            </th>
 
-                        <tbody>
+                            <th>
+                                @sortablelink('priority', 'Priority')
+                            </th>
 
-                            @forelse($tasks as $task)
+                            <th>
+                                @sortablelink('status', 'Status')
+                            </th>
 
-                                <tr>
+                            <th>
+                                @sortablelink('due_date', 'Due Date')
+                            </th>
 
-                                    {{-- Checkbox --}}
-                                    <td>
+                            <th>
+                                @sortablelink('created_at', 'Created')
+                            </th>
 
-                                        <input
-                                            type="checkbox"
-                                            name="task_ids[]"
-                                            value="{{ $task->id }}"
-                                            class="form-check-input task-checkbox"
-                                        >
+                            <th>
+                                Actions
+                            </th>
 
-                                    </td>
+                        </tr>
 
+                    </thead>
 
-                                    {{-- ID --}}
-                                    <td>
-                                        {{ $task->id }}
-                                    </td>
 
+                    <tbody>
 
-                                    {{-- Title --}}
-                                    <td>
+                        @forelse($tasks as $task)
 
-                                        <strong>
-                                            {{ $task->title }}
-                                        </strong>
+                        <tr>
 
-                                        @if($task->description)
+                            <td>
 
-                                            <div class="small text-muted">
+                                <input
+                                    type="checkbox"
+                                    name="task_ids[]"
+                                    value="{{ $task->id }}"
+                                    class="form-check-input task-checkbox">
 
-                                                {{ \Illuminate\Support\Str::limit(
-                                                    $task->description,
-                                                    70
-                                                ) }}
+                            </td>
 
-                                            </div>
 
-                                        @endif
+                            <td>
 
-                                    </td>
+                                <span class="fw-semibold">
+                                    #{{ $task->id }}
+                                </span>
 
+                            </td>
 
-                                    {{-- Priority --}}
-                                    <td>
 
-                                        @php
+                            <td>
 
-                                            $priorityClass = [
-                                                'High' => 'danger',
-                                                'Medium' => 'warning',
-                                                'Low' => 'success',
-                                            ];
+                                <div class="task-title">
+                                    {{ $task->title }}
+                                </div>
 
-                                        @endphp
+                                @if($task->description)
 
-                                        <span
-                                            class="badge bg-{{ $priorityClass[$task->priority] }}"
-                                        >
-                                            {{ $task->priority }}
-                                        </span>
+                                <div class="task-description">
 
-                                    </td>
+                                    {{ \Illuminate\Support\Str::limit($task->description, 70) }}
 
+                                </div>
 
-                                    {{-- Status --}}
-                                    <td>
+                                @endif
 
-                                        @php
+                            </td>
 
-                                            $statusClass = [
-                                                'Completed' => 'success',
-                                                'In Progress' => 'info',
-                                                'Pending' => 'secondary',
-                                            ];
 
-                                        @endphp
+                            <td>
 
-                                        <span
-                                            class="badge bg-{{ $statusClass[$task->status] }}"
-                                        >
-                                            {{ $task->status }}
-                                        </span>
+                                @php
 
-                                    </td>
+                                $priorityClass = [
+                                'High' => 'danger',
+                                'Medium' => 'warning',
+                                'Low' => 'success',
+                                ];
 
+                                @endphp
 
-                                    {{-- Due Date --}}
-                                    <td>
+                                <span class="badge bg-{{ $priorityClass[$task->priority] ?? 'secondary' }}">
 
-                                        @if($task->due_date)
+                                    {{ $task->priority }}
 
-                                            {{ $task->due_date->format('M d, Y') }}
+                                </span>
 
-                                            @if(
-                                                $task->due_date->isPast() &&
-                                                $task->status !== 'Completed'
-                                            )
+                            </td>
 
-                                                <span class="badge bg-danger">
-                                                    Overdue
-                                                </span>
 
-                                            @endif
+                            <td>
 
-                                        @else
+                                @php
 
-                                            <span class="text-muted">
-                                                -
-                                            </span>
+                                $statusClass = [
+                                'Completed' => 'success',
+                                'In Progress' => 'info',
+                                'Pending' => 'secondary',
+                                ];
 
-                                        @endif
+                                @endphp
 
-                                    </td>
+                                <span class="badge bg-{{ $statusClass[$task->status] ?? 'secondary' }}">
 
+                                    {{ $task->status }}
 
-                                    {{-- Created Date --}}
-                                    <td>
+                                </span>
 
-                                        {{ $task->created_at->format('M d, Y') }}
+                            </td>
 
-                                    </td>
 
+                            <td>
 
-                                    {{-- Actions --}}
-                                    <td>
+                                @if($task->due_date)
 
-                                        <a
-                                            href="{{ route('tasks.edit', $task) }}"
-                                            class="btn btn-sm btn-warning"
-                                            title="Edit task"
-                                        >
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
+                                <div class="fw-semibold">
 
+                                    {{ $task->due_date->format('M d, Y') }}
+
+                                </div>
+
+                                @if(
+                                $task->due_date->isPast() &&
+                                $task->status !== 'Completed'
+                                )
+
+                                <span class="badge bg-danger mt-1">
+
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    Overdue
+
+                                </span>
+
+                                @endif
+
+                                @else
+
+                                <span class="text-muted">
+                                    —
+                                </span>
+
+                                @endif
+
+                            </td>
+
+
+                            <td>
+
+                                <span class="text-muted">
+
+                                    {{ $task->created_at->format('M d, Y') }}
+
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <div class="action-buttons">
+
+                                    <a
+                                        href="{{ route('tasks.show', $task) }}"
+                                        class="btn btn-sm btn-outline-info"
+                                        title="View">
+
+                                        <i class="bi bi-eye"></i>
+
+                                    </a>
+
+
+                                    <a
+                                        href="{{ route('tasks.edit', $task) }}"
+                                        class="btn btn-sm btn-outline-warning"
+                                        title="Edit">
+
+                                        <i class="bi bi-pencil"></i>
+
+                                    </a>
+
+
+                                    <form
+                                        action="{{ route('tasks.destroy', $task) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Move this task to trash?')">
+
+                                        @csrf
+                                        @method('DELETE')
 
                                         <button
-                                            type="button"
-                                            class="btn btn-sm btn-danger"
-                                            title="Delete task"
-                                            onclick="deleteSingleTask({{ $task->id }})"
-                                        >
+                                            type="submit"
+                                            class="btn btn-sm btn-outline-danger"
+                                            title="Move to Trash">
+
                                             <i class="bi bi-trash"></i>
+
                                         </button>
 
-                                    </td>
+                                    </form>
 
-                                </tr>
+                                </div>
 
-                            @empty
+                            </td>
 
-                                <tr>
+                        </tr>
 
-                                    <td
-                                        colspan="8"
-                                        class="text-center py-5"
-                                    >
+                        @empty
 
-                                        <i
-                                            class="bi bi-inbox fs-1 text-muted d-block mb-3"
-                                        ></i>
+                        <tr>
 
-                                        <h5>
-                                            No tasks found
-                                        </h5>
+                            <td
+                                colspan="8"
+                                class="empty-state">
 
-                                        <p class="text-muted mb-0">
-                                            Try changing your search or filters.
-                                        </p>
+                                <div class="empty-state-icon">
 
-                                    </td>
+                                    <i class="bi bi-inbox"></i>
 
-                                </tr>
+                                </div>
 
-                            @endforelse
+                                <h5 class="fw-bold">
+                                    No tasks found
+                                </h5>
 
-                        </tbody>
+                                <p class="text-muted mb-3">
+                                    Try changing your search or filters.
+                                </p>
 
-                    </table>
+                                <a
+                                    href="{{ route('tasks.create') }}"
+                                    class="btn btn-primary">
+
+                                    <i class="bi bi-plus-lg me-1"></i>
+                                    Create Task
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                        @endforelse
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        @if($tasks->total() > 0)
+
+        <div class="card-footer bg-white">
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+                <div class="text-muted small">
+
+                    Showing
+
+                    <strong>
+                        {{ $tasks->firstItem() }}
+                    </strong>
+
+                    to
+
+                    <strong>
+                        {{ $tasks->lastItem() }}
+                    </strong>
+
+                    of
+
+                    <strong>
+                        {{ $tasks->total() }}
+                    </strong>
+
+                    tasks
 
                 </div>
 
 
-                {{-- Pagination --}}
                 @if($tasks->hasPages())
 
-                    <div class="d-flex justify-content-center mt-4">
-
-                        {{ $tasks->links() }}
-
-                    </div>
-
-                @endif
-
-
-                {{-- Result Count --}}
-                @if($tasks->total() > 0)
-
-                    <div class="text-muted mt-3">
-
-                        Showing
-                        <strong>{{ $tasks->firstItem() }}</strong>
-                        to
-                        <strong>{{ $tasks->lastItem() }}</strong>
-                        of
-                        <strong>{{ $tasks->total() }}</strong>
-                        tasks
-
-                    </div>
-
-                @else
-
-                    <div class="text-muted mt-3">
-                        No matching tasks found.
-                    </div>
+                {{ $tasks->withQueryString()->links('pagination::bootstrap-5') }}
 
                 @endif
 
@@ -641,124 +946,85 @@
 
         </div>
 
-    </form>
+        @endif
+
+    </div>
+
+</form>
 
 
-    {{-- JavaScript --}}
-    <script>
-
-        document.addEventListener('DOMContentLoaded', function () {
-
-            const selectAll = document.getElementById('selectAll');
-
-            const checkboxes = document.querySelectorAll('.task-checkbox');
-
-            const bulkActions = document.getElementById('bulkActions');
-
-            const selectedCount = document.getElementById('selectedCount');
+@endsection
 
 
-            function updateBulkActions() {
+@push('scripts')
 
-                const selected = document.querySelectorAll(
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const selectAll = document.getElementById('selectAll');
+
+        const checkboxes =
+            document.querySelectorAll('.task-checkbox');
+
+        const bulkActions =
+            document.getElementById('bulkActions');
+
+        const selectedCount =
+            document.getElementById('selectedCount');
+
+
+        function updateBulkActions() {
+
+            const selected =
+                document.querySelectorAll(
                     '.task-checkbox:checked'
                 );
 
-                const count = selected.length;
+            const count = selected.length;
 
-                selectedCount.textContent = count;
+            selectedCount.textContent = count;
 
-                if (count > 0) {
+            bulkActions.style.display =
+                count > 0 ? 'block' : 'none';
 
-                    bulkActions.style.setProperty(
-                        'display',
-                        'flex',
-                        'important'
-                    );
+            selectAll.checked =
+                checkboxes.length > 0 &&
+                count === checkboxes.length;
 
-                } else {
+            selectAll.indeterminate =
+                count > 0 &&
+                count < checkboxes.length;
 
-                    bulkActions.style.setProperty(
-                        'display',
-                        'none',
-                        'important'
-                    );
-
-                }
-
-                selectAll.checked =
-                    checkboxes.length > 0 &&
-                    count === checkboxes.length;
-
-            }
+        }
 
 
-            selectAll.addEventListener('change', function () {
+        selectAll.addEventListener('change', function() {
 
-                checkboxes.forEach(function (checkbox) {
+            checkboxes.forEach(function(checkbox) {
 
-                    checkbox.checked = selectAll.checked;
-
-                });
-
-                updateBulkActions();
+                checkbox.checked =
+                    selectAll.checked;
 
             });
 
-
-            checkboxes.forEach(function (checkbox) {
-
-                checkbox.addEventListener('change', function () {
-
-                    updateBulkActions();
-
-                });
-
-            });
+            updateBulkActions();
 
         });
 
 
-        function deleteSingleTask(taskId) {
+        checkboxes.forEach(function(checkbox) {
 
-            if (!confirm('Are you sure you want to delete this task?')) {
-                return;
-            }
+            checkbox.addEventListener(
+                'change',
+                updateBulkActions
+            );
 
-            const form = document.createElement('form');
-
-            form.method = 'POST';
-
-            form.action = "{{ url('/tasks') }}/" + taskId;
-
-            const csrf = document.createElement('input');
-
-            csrf.type = 'hidden';
-
-            csrf.name = '_token';
-
-            csrf.value = "{{ csrf_token() }}";
-
-            form.appendChild(csrf);
+        });
 
 
-            const method = document.createElement('input');
+        updateBulkActions();
 
-            method.type = 'hidden';
+    });
+</script>
 
-            method.name = '_method';
-
-            method.value = 'DELETE';
-
-            form.appendChild(method);
-
-
-            document.body.appendChild(form);
-
-            form.submit();
-
-        }
-
-    </script>
-
-@endsection
+@endpush

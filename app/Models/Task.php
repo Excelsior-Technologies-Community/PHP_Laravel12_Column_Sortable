@@ -4,15 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Kyslik\ColumnSortable\Sortable;
 
 class Task extends Model
 {
-    use HasFactory, Sortable;
+    use HasFactory, Sortable, SoftDeletes;
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
         'title',
         'description',
@@ -21,16 +19,10 @@ class Task extends Model
         'due_date',
     ];
 
-    /**
-     * Cast attributes to native types.
-     */
     protected $casts = [
         'due_date' => 'date',
     ];
 
-    /**
-     * Columns that can be sorted.
-     */
     public $sortable = [
         'id',
         'title',
